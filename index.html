@@ -2,233 +2,284 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>گالری گلدان واقعیت افزوده</title>
-    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>AR Gallery</title>
     
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
 
     <style>
         :root {
-            --primary-color: #00bf63;
-            --glass-bg: rgba(255, 255, 255, 0.85);
-            --glass-border: rgba(255, 255, 255, 0.4);
-            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            --primary: #00b894;
+            --surface: rgba(255, 255, 255, 0.90);
+            --blur: blur(16px);
+            --text: #2d3436;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none; /* جلوگیری از انتخاب متن */
         }
 
         body {
             margin: 0;
             padding: 0;
+            /* ارتفاع داینامیک برای حل مشکل سافاری و کروم موبایل */
+            height: 100dvh; 
+            width: 100vw;
+            overflow: hidden; /* حذف اسکرول کل صفحه */
             font-family: 'Vazirmatn', sans-serif;
-            background-color: #f0f2f5;
-            height: 100vh;
-            overflow: hidden;
+            background-color: #dfe6e9;
+            position: fixed; /* قفل کردن صفحه */
         }
 
-        /* استایل نمایشگر سه بعدی */
+        /* کانتینر اصلی مدل */
+        .viewer-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
         model-viewer {
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            background: radial-gradient(circle at 50% 30%, #fff 0%, #b2bec3 100%);
             --poster-color: transparent;
         }
 
-        /* رابط کاربری شیشه‌ای (Glassmorphism) */
-        .ui-container {
+        /* دکمه شناور بالا */
+        .top-badge {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-radius: 24px;
-            border: 1px solid var(--glass-border);
-            box-shadow: var(--shadow);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            animation: slideUp 0.5s ease-out;
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(100px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        .header {
-            text-align: center;
+            top: 20px; /* فاصله از بالا برای بریدگی آیفون */
+            top: calc(20px + env(safe-area-inset-top)); 
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(4px);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #636e72;
+            z-index: 10;
             font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            pointer-events: none; /* تاچ رد شود */
         }
+
+        /* پنل کنترل پایین */
+        .control-panel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            z-index: 20;
+            background: var(--surface);
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+            padding: 20px;
+            padding-bottom: max(20px, env(safe-area-inset-bottom)); /* برای آیفون‌های جدید */
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            box-shadow: 0 -5px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        /* مدیا کوئری برای تبلت و دسکتاپ (ریسپانسیو واقعی) */
+        @media (min-width: 768px) {
+            .control-panel {
+                width: 400px;
+                left: 50%;
+                bottom: 20px;
+                transform: translateX(-50%);
+                border-radius: 24px; /* گرد شدن کامل در دسکتاپ */
+            }
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        h2 { margin: 0; font-size: 1rem; color: var(--text); }
 
         /* لیست گلدان‌ها */
-        .pot-selector {
+        .pot-list {
             display: flex;
-            overflow-x: auto;
             gap: 12px;
-            padding-bottom: 5px;
-            scrollbar-width: none; /* مخفی کردن اسکرول بار */
+            overflow-x: auto;
+            padding: 4px;
+            scrollbar-width: none;
+            /* اسکرول نرم */
+            -webkit-overflow-scrolling: touch; 
         }
-        
-        .pot-selector::-webkit-scrollbar { display: none; }
+        .pot-list::-webkit-scrollbar { display: none; }
 
-        .pot-btn {
-            min-width: 70px;
+        .pot-item {
+            flex: 0 0 auto;
+            width: 70px;
             height: 70px;
-            border-radius: 16px;
-            border: 2px solid transparent;
+            border-radius: 18px;
             background: #fff;
-            cursor: pointer;
-            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            font-size: 1.8rem;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
-        .pot-btn.active {
-            border-color: var(--primary-color);
-            transform: scale(1.05);
-            background: #e6fffa;
+        .pot-item.active {
+            border-color: var(--primary);
+            background: #e0f2f1;
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(0, 184, 148, 0.2);
         }
 
         /* انتخاب رنگ */
-        .color-selector {
+        .color-picker {
             display: flex;
             justify-content: center;
             gap: 15px;
+            margin-top: 20px;
         }
-
-        .color-btn {
-            width: 35px;
-            height: 35px;
+        .color-dot {
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             border: 2px solid #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
             cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             transition: transform 0.2s;
         }
+        .color-dot:active { transform: scale(0.8); }
 
-        .color-btn:active { transform: scale(0.9); }
-
-        /* دکمه واقعیت افزوده */
-        .ar-button {
-            background-color: var(--primary-color);
+        /* دکمه اختصاصی AR */
+        .ar-btn {
+            width: 100%;
+            margin-top: 15px;
+            padding: 14px;
+            background: var(--primary);
             color: white;
             border: none;
-            border-radius: 12px;
-            padding: 12px;
-            font-family: 'Vazirmatn', sans-serif;
+            border-radius: 16px;
+            font-family: 'Vazirmatn';
             font-weight: bold;
-            font-size: 16px;
-            cursor: pointer;
+            font-size: 1rem;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            box-shadow: 0 4px 15px rgba(0, 191, 99, 0.4);
+            box-shadow: 0 8px 20px rgba(0, 184, 148, 0.3);
+            cursor: pointer;
         }
-
-        /* آیکون AR */
-        .ar-icon { width: 20px; height: 20px; fill: white; }
-
-        /* مخفی کردن دکمه پیش‌فرض گوگل */
-        .slot-ar-button { display: none; }
+        .ar-btn:active { transform: scale(0.98); }
+        
+        /* مخفی کردن دکمه پیش‌فرض */
+        button[slot="ar-button"] { display: none; }
 
     </style>
 </head>
 <body>
 
-    <model-viewer 
-        id="viewer"
-        src="https://modelviewer.dev/shared-assets/models/Astronaut.glb" 
-        ios-src="https://modelviewer.dev/shared-assets/models/Astronaut.usdz"
-        alt="گلدان سه بعدی"
-        ar
-        ar-modes="scene-viewer webxr quick-look"
-        camera-controls
-        shadow-intensity="1"
-        auto-rotate>
+    <div class="top-badge">نمایشگاه مجازی گلدان</div>
 
-        <button slot="ar-button" class="ar-button">
-            <svg class="ar-icon" viewBox="0 0 24 24"><path d="M5 3C3.9 3 3 3.9 3 5V9H5V5H9V3H5M5 15V19H9V21H5C3.9 21 3 20.1 3 19V15H5M19 3H15V5H19V9H21V5C21 3.9 20.1 3 19 3M19 21H15V19H19V15H21V19C21 20.1 20.1 21 19 21Z"/></svg>
-            مشاهده در محیط واقعی
-        </button>
+    <div class="viewer-container">
+        <model-viewer 
+            id="viewer"
+            src="./pot1.glb" 
+            ar
+            ar-modes="scene-viewer webxr quick-look"
+            camera-controls
+            shadow-intensity="1"
+            shadow-softness="0.8"
+            exposure="1"
+            min-camera-orbit="auto auto 5%"
+            max-camera-orbit="auto auto 100%"
+            interaction-prompt="none" 
+            auto-rotate>
+            
+            <button slot="ar-button" id="ar-trigger">AR</button>
 
-    </model-viewer>
+        </model-viewer>
+    </div>
 
-    <div class="ui-container">
-        <div class="header">انتخاب مدل گلدان</div>
-        
-        <div class="pot-selector" id="potList">
+    <div class="control-panel">
+        <div class="header-row">
+            <h2>انتخاب مدل</h2>
+            <span style="font-size: 0.8rem; color: #aaa;">۵ مدل موجود</span>
+        </div>
+
+        <div class="pot-list" id="potList">
             </div>
 
-        <div class="header" style="margin-top: 10px; font-size: 0.9em;">تغییر رنگ</div>
-        
-        <div class="color-selector">
-            <div class="color-btn" style="background: #ffffff;" onclick="changeColor('#ffffff')"></div>
-            <div class="color-btn" style="background: #e74c3c;" onclick="changeColor('#e74c3c')"></div>
-            <div class="color-btn" style="background: #3498db;" onclick="changeColor('#3498db')"></div>
-            <div class="color-btn" style="background: #f1c40f;" onclick="changeColor('#f1c40f')"></div>
-            <div class="color-btn" style="background: #2c3e50;" onclick="changeColor('#2c3e50')"></div>
+        <div class="color-picker">
+            <div class="color-dot" style="background: #ffffff" onclick="changeColor('#ffffff')"></div>
+            <div class="color-dot" style="background: #34495e" onclick="changeColor('#34495e')"></div>
+            <div class="color-dot" style="background: #e74c3c" onclick="changeColor('#e74c3c')"></div>
+            <div class="color-dot" style="background: #f1c40f" onclick="changeColor('#f1c40f')"></div>
+            <div class="color-dot" style="background: #9b59b6" onclick="changeColor('#9b59b6')"></div>
         </div>
+
+        <button class="ar-btn" onclick="document.getElementById('ar-trigger').click()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M13 3l6 6-6 6M5 3l-6 6 6 6M3 21h18"/>
+            </svg>
+            مشاهده در محیط واقعی
+        </button>
     </div>
 
     <script>
-        const viewer = document.querySelector('#viewer');
-        const potList = document.querySelector('#potList');
+        const viewer = document.getElementById('viewer');
+        const potList = document.getElementById('potList');
 
-        // تعریف ۵ مدل گلدان (لینک فایل‌های خود را اینجا قرار دهید)
-        // من از لینک‌های تستی استفاده کردم. شما باید آدرس فایل‌های خودتان را جایگزین کنید.
-       // تعریف ۵ مدل گلدان با آدرس فایل‌های دانلود شده شما
-       const pots = [
-       { name: "گلدان ۱", src: "./pot1.glb", icon: "🏺" },
-       { name: "گلدان ۲", src: "./pot2.glb", icon: "🪴" },
-       { name: "گلدان ۳", src: "./pot3.glb", icon: "🌵" },
-       { name: "گلدان ۴", src: "./pot4.glb", icon: "🌻" },
-       { name: "گلدان ۵", src: "./pot5.glb", icon: "🌳" }
-    ];
+        const pots = [
+            { name: "۱", src: "./pot1.glb", icon: "🍍" },
+            { name: "۲", src: "./pot2.glb", icon: "🌹" },
+            { name: "۳", src: "./pot3.glb", icon: "🏺" },
+            { name: "۴", src: "./pot4.glb", icon: "🎍" },
+            { name: "۵", src: "./pot5.glb", icon: "⛩️" }
+        ];
 
-        // ساخت دکمه‌ها به صورت خودکار
+        // ساخت لیست
         pots.forEach((pot, index) => {
             const btn = document.createElement('div');
-            btn.className = `pot-btn ${index === 0 ? 'active' : ''}`;
-            btn.innerHTML = pot.icon; // اینجا می‌توانید عکس گلدان را هم بگذارید
-            btn.onclick = () => loadModel(index, btn);
+            btn.className = `pot-item ${index === 0 ? 'active' : ''}`;
+            btn.innerHTML = pot.icon;
+            
+            btn.onclick = () => {
+                // لود مدل
+                viewer.src = pot.src;
+                
+                // هندل کردن کلاس اکتیو
+                document.querySelectorAll('.pot-item').forEach(i => i.classList.remove('active'));
+                btn.classList.add('active');
+            };
             potList.appendChild(btn);
         });
 
-        // تابع تغییر مدل
-        function loadModel(index, btnElement) {
-            // تغییر سورس مدل
-            viewer.src = pots[index].src;
-            
-            // آپدیت کردن استایل دکمه‌ها
-            document.querySelectorAll('.pot-btn').forEach(b => b.classList.remove('active'));
-            btnElement.classList.add('active');
-        }
-
-        // تابع تغییر رنگ (روی متریال اصلی مدل تاثیر می‌گذارد)
-        function changeColor(color) {
+        // تغییر رنگ
+        function changeColor(hex) {
             if (!viewer.model) return;
-            
-            const materials = viewer.model.materials;
-            if (materials && materials.length > 0) {
-                // رنگ را روی اولین متریال مدل اعمال می‌کند
-                materials[0].pbrMetallicRoughness.setBaseColorFactor(hexToRgb(color));
+            // تلاش برای تغییر رنگ اولین متریال
+            const mat = viewer.model.materials[0];
+            if(mat) {
+                mat.pbrMetallicRoughness.setBaseColorFactor(hexToRgb(hex));
             }
         }
 
-        // تبدیل رنگ HEX به فرمت قابل فهم برای مدل سه بعدی
         function hexToRgb(hex) {
             const r = parseInt(hex.slice(1, 3), 16) / 255;
             const g = parseInt(hex.slice(3, 5), 16) / 255;
             const b = parseInt(hex.slice(5, 7), 16) / 255;
-            return [r, g, b, 1]; // آلفا (شفافیت) ۱ است
+            return [r, g, b, 1];
         }
     </script>
 </body>
