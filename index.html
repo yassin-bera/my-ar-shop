@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>AR Gallery</title>
     
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
@@ -14,27 +15,26 @@
             --surface: rgba(255, 255, 255, 0.90);
             --blur: blur(16px);
             --text: #2d3436;
+            --active-tab: #0984e3;
         }
 
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
-            user-select: none; /* جلوگیری از انتخاب متن */
+            user-select: none;
         }
 
         body {
             margin: 0;
             padding: 0;
-            /* ارتفاع داینامیک برای حل مشکل سافاری و کروم موبایل */
             height: 100dvh; 
             width: 100vw;
-            overflow: hidden; /* حذف اسکرول کل صفحه */
+            overflow: hidden;
             font-family: 'Vazirmatn', sans-serif;
             background-color: #dfe6e9;
-            position: fixed; /* قفل کردن صفحه */
+            position: fixed;
         }
 
-        /* کانتینر اصلی مدل */
         .viewer-container {
             width: 100%;
             height: 100%;
@@ -51,10 +51,8 @@
             --poster-color: transparent;
         }
 
-        /* دکمه شناور بالا */
         .top-badge {
             position: absolute;
-            top: 20px; /* فاصله از بالا برای بریدگی آیفون */
             top: calc(20px + env(safe-area-inset-top)); 
             left: 50%;
             transform: translateX(-50%);
@@ -67,10 +65,9 @@
             z-index: 10;
             font-weight: bold;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            pointer-events: none; /* تاچ رد شود */
+            pointer-events: none;
         }
 
-        /* پنل کنترل پایین */
         .control-panel {
             position: absolute;
             bottom: 0;
@@ -81,46 +78,73 @@
             backdrop-filter: var(--blur);
             -webkit-backdrop-filter: var(--blur);
             padding: 20px;
-            padding-bottom: max(20px, env(safe-area-inset-bottom)); /* برای آیفون‌های جدید */
+            padding-bottom: max(20px, env(safe-area-inset-bottom));
             border-top-left-radius: 24px;
             border-top-right-radius: 24px;
             box-shadow: 0 -5px 30px rgba(0,0,0,0.1);
             transition: transform 0.3s ease;
         }
 
-        /* مدیا کوئری برای تبلت و دسکتاپ (ریسپانسیو واقعی) */
         @media (min-width: 768px) {
             .control-panel {
                 width: 400px;
                 left: 50%;
                 bottom: 20px;
                 transform: translateX(-50%);
-                border-radius: 24px; /* گرد شدن کامل در دسکتاپ */
+                border-radius: 24px;
             }
+        }
+
+        /* استایل تب‌ها برای انتخاب دسته‌بندی */
+        .category-tabs {
+            display: flex;
+            background: rgba(0,0,0,0.05);
+            padding: 4px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 8px;
+            border-radius: 10px;
+            font-family: 'Vazirmatn';
+            font-size: 0.9rem;
+            color: #636e72;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: #fff;
+            color: var(--text);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            font-weight: bold;
         }
 
         .header-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
         h2 { margin: 0; font-size: 1rem; color: var(--text); }
 
-        /* لیست گلدان‌ها */
         .pot-list {
             display: flex;
             gap: 12px;
             overflow-x: auto;
             padding: 4px;
             scrollbar-width: none;
-            /* اسکرول نرم */
             -webkit-overflow-scrolling: touch; 
+            min-height: 80px; /* جلوگیری از پرش ارتفاع */
         }
         .pot-list::-webkit-scrollbar { display: none; }
 
-        .pot-item {
+        .item-box {
             flex: 0 0 auto;
             width: 70px;
             height: 70px;
@@ -136,19 +160,18 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
-        .pot-item.active {
+        .item-box.active {
             border-color: var(--primary);
             background: #e0f2f1;
             transform: scale(1.1);
             box-shadow: 0 5px 15px rgba(0, 184, 148, 0.2);
         }
 
-        /* انتخاب رنگ */
         .color-picker {
             display: flex;
             justify-content: center;
             gap: 15px;
-            margin-top: 20px;
+            margin-top: 15px;
         }
         .color-dot {
             width: 28px;
@@ -161,7 +184,6 @@
         }
         .color-dot:active { transform: scale(0.8); }
 
-        /* دکمه اختصاصی AR */
         .ar-btn {
             width: 100%;
             margin-top: 15px;
@@ -182,21 +204,21 @@
         }
         .ar-btn:active { transform: scale(0.98); }
         
-        /* مخفی کردن دکمه پیش‌فرض */
         button[slot="ar-button"] { display: none; }
 
     </style>
 </head>
 <body>
 
-    <div class="top-badge">نمایشگاه مجازی گلدان</div>
+    <div class="top-badge" id="topTitle">نمایشگاه مجازی</div>
 
     <div class="viewer-container">
         <model-viewer 
             id="viewer"
             src="./pot1.glb" 
             ar
-            ar-modes="scene-viewer webxr quick-look"
+            ar-modes="webxr scene-viewer quick-look"
+            ar-scale="auto"
             camera-controls
             shadow-intensity="1"
             shadow-softness="0.8"
@@ -204,6 +226,7 @@
             min-camera-orbit="auto auto 5%"
             max-camera-orbit="auto auto 100%"
             interaction-prompt="none" 
+            autoplay
             auto-rotate>
             
             <button slot="ar-button" id="ar-trigger">AR</button>
@@ -212,15 +235,21 @@
     </div>
 
     <div class="control-panel">
-        <div class="header-row">
-            <h2>انتخاب مدل</h2>
-            <span style="font-size: 0.8rem; color: #aaa;">۵ مدل موجود</span>
+        
+        <div class="category-tabs">
+            <button class="tab-btn active" onclick="switchCategory('pots')">🏺 گلدان</button>
+            <button class="tab-btn" onclick="switchCategory('carpets')">🧶 فرش</button>
         </div>
 
-        <div class="pot-list" id="potList">
+        <div class="header-row">
+            <h2 id="categoryTitle">انتخاب مدل</h2>
+            <span id="countBadge" style="font-size: 0.8rem; color: #aaa;">۵ مدل</span>
+        </div>
+
+        <div class="pot-list" id="itemList">
             </div>
 
-        <div class="color-picker">
+        <div class="color-picker" id="colorPickerPanel">
             <div class="color-dot" style="background: #ffffff" onclick="changeColor('#ffffff')"></div>
             <div class="color-dot" style="background: #34495e" onclick="changeColor('#34495e')"></div>
             <div class="color-dot" style="background: #e74c3c" onclick="changeColor('#e74c3c')"></div>
@@ -238,37 +267,82 @@
 
     <script>
         const viewer = document.getElementById('viewer');
-        const potList = document.getElementById('potList');
+        const itemList = document.getElementById('itemList');
+        const countBadge = document.getElementById('countBadge');
+        const colorPanel = document.getElementById('colorPickerPanel');
+        let currentCategory = 'pots';
 
-        const pots = [
-            { name: "۱", src: "./pot1.glb", icon: "🍍" },
-            { name: "۲", src: "./pot2.glb", icon: "🌹" },
-            { name: "۳", src: "./pot3.glb", icon: "🏺" },
-            { name: "۴", src: "./pot4.glb", icon: "🎍" },
-            { name: "۵", src: "./pot5.glb", icon: "⛩️" }
-        ];
+        // دیتابیس مدل‌ها
+        const db = {
+            pots: [
+                { name: "گلدان ۱", src: "./pot1.glb", icon: "🍍" },
+                { name: "گلدان ۲", src: "./pot2.glb", icon: "🌹" },
+                { name: "گلدان ۳", src: "./pot3.glb", icon: "🏺" },
+                { name: "گلدان ۴", src: "./pot4.glb", icon: "🎍" },
+                { name: "گلدان ۵", src: "./pot5.glb", icon: "⛩️" }
+            ],
+            carpets: [
+                // فرض بر این است که فایل‌های فرش دارید
+                { name: "فرش ۱", src: "./carpet1.glb", icon: "🧶" },
+                { name: "فرش ۲", src: "./carpet2.glb", icon: "🦁" },
+                { name: "فرش ۳", src: "./carpet3.glb", icon: "🎨" },
+                { name: "فرش ۴", src: "./carpet4.glb", icon: "💠" },
+                { name: "فرش ۵", src: "./carpet5.glb", icon: "🌷" }
+            ]
+        };
 
-        // ساخت لیست
-        pots.forEach((pot, index) => {
-            const btn = document.createElement('div');
-            btn.className = `pot-item ${index === 0 ? 'active' : ''}`;
-            btn.innerHTML = pot.icon;
+        // تابع تغییر دسته‌بندی
+        function switchCategory(cat) {
+            currentCategory = cat;
             
-            btn.onclick = () => {
-                // لود مدل
-                viewer.src = pot.src;
-                
-                // هندل کردن کلاس اکتیو
-                document.querySelectorAll('.pot-item').forEach(i => i.classList.remove('active'));
-                btn.classList.add('active');
-            };
-            potList.appendChild(btn);
-        });
+            // آپدیت تب‌ها
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
 
-        // تغییر رنگ
+            // اگر فرش انتخاب شد، تغییر رنگ شاید معنی نداشته باشد (یا پنهان شود)
+            // اینجا برای سادگی نگهش میداریم، اما میشه با دستور زیر مخفی کرد:
+            // colorPanel.style.display = cat === 'carpets' ? 'none' : 'flex';
+
+            renderList();
+        }
+
+        // تابع ساخت لیست
+        function renderList() {
+            itemList.innerHTML = '';
+            const data = db[currentCategory];
+            countBadge.innerText = `${data.length} مدل موجود`;
+
+            data.forEach((item, index) => {
+                const btn = document.createElement('div');
+                btn.className = `item-box ${index === 0 ? 'active' : ''}`;
+                btn.innerHTML = item.icon;
+                
+                btn.onclick = () => {
+                    loadModel(item.src);
+                    
+                    document.querySelectorAll('.item-box').forEach(i => i.classList.remove('active'));
+                    btn.classList.add('active');
+                };
+                itemList.appendChild(btn);
+            });
+
+            // لود کردن اولین آیتم دسته بندی جدید
+            loadModel(data[0].src);
+        }
+
+        function loadModel(src) {
+            viewer.src = src;
+            
+            // ریست کردن انیمیشن برای اینکه هر بار فرش انتخاب شد، انیمیشن پهن شدن از اول اجرا شود
+            if(currentCategory === 'carpets') {
+                viewer.currentTime = 0;
+                viewer.play();
+            }
+        }
+
+        // تغییر رنگ (بیشتر برای گلدان‌ها)
         function changeColor(hex) {
             if (!viewer.model) return;
-            // تلاش برای تغییر رنگ اولین متریال
             const mat = viewer.model.materials[0];
             if(mat) {
                 mat.pbrMetallicRoughness.setBaseColorFactor(hexToRgb(hex));
@@ -281,6 +355,9 @@
             const b = parseInt(hex.slice(5, 7), 16) / 255;
             return [r, g, b, 1];
         }
+
+        // راه اندازی اولیه
+        renderList();
     </script>
 </body>
 </html>
