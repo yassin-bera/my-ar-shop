@@ -11,7 +11,7 @@
     <style>
         :root {
             --primary: #00b894;
-            --surface: rgba(255, 255, 255, 0.92);
+            --surface: rgba(255, 255, 255, 0.95);
             --blur: blur(20px);
             --text: #2d3436;
             --font-fa: 'Vazirmatn', sans-serif;
@@ -21,19 +21,11 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
 
         body {
-            margin: 0;
-            height: 100dvh;
-            width: 100vw;
-            overflow: hidden;
-            font-family: var(--font-fa);
-            background-color: #dfe6e9;
-            transition: all 0.3s ease;
+            margin: 0; height: 100dvh; width: 100vw; overflow: hidden;
+            font-family: var(--font-fa); background-color: #dfe6e9; transition: all 0.3s ease;
         }
 
-        body.lang-en {
-            font-family: var(--font-en);
-            direction: ltr;
-        }
+        body.lang-en { font-family: var(--font-en); direction: ltr; }
 
         .viewer-container {
             width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1;
@@ -43,113 +35,84 @@
             width: 100%; height: 100%;
             background: radial-gradient(circle at 50% 30%, #fff 0%, #b2bec3 100%);
             --poster-color: transparent;
-            
-            /* 🔥 نکته کلیدی برای حل مشکل زوم: */
             touch-action: none; 
         }
 
-        /* دکمه تغییر زبان */
         .lang-switch {
-            position: absolute;
-            top: calc(20px + env(safe-area-inset-top));
-            right: 20px;
-            z-index: 50;
-            background: rgba(255,255,255,0.6);
-            backdrop-filter: blur(4px);
-            padding: 8px 12px;
-            border-radius: 12px;
-            font-weight: bold;
-            font-size: 0.9rem;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
+            position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 20px; z-index: 50;
+            background: rgba(255,255,255,0.6); backdrop-filter: blur(4px);
+            padding: 8px 12px; border-radius: 12px; font-weight: bold; font-size: 0.9rem;
+            cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: transform 0.2s;
         }
-        
         body.lang-en .lang-switch { right: auto; left: 20px; }
         .lang-switch:active { transform: scale(0.95); }
 
-        /* پنل کنترل */
         .control-panel {
             position: absolute; bottom: 0; left: 0; width: 100%; z-index: 20;
-            background: var(--surface);
-            backdrop-filter: var(--blur);
-            -webkit-backdrop-filter: var(--blur);
-            padding: 20px;
-            padding-bottom: max(20px, env(safe-area-inset-bottom));
+            background: var(--surface); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+            padding: 20px; padding-bottom: max(20px, env(safe-area-inset-bottom));
             border-top-left-radius: 24px; border-top-right-radius: 24px;
-            box-shadow: 0 -5px 30px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
+            box-shadow: 0 -5px 30px rgba(0,0,0,0.1); transition: transform 0.3s ease;
         }
 
         @media (min-width: 768px) {
-            .control-panel {
-                width: 400px; left: 50%; bottom: 20px;
-                transform: translateX(-50%); border-radius: 24px;
-            }
+            .control-panel { width: 400px; left: 50%; bottom: 20px; transform: translateX(-50%); border-radius: 24px; }
         }
 
         .category-tabs {
-            display: flex; gap: 10px;
-            background: rgba(0,0,0,0.05);
-            padding: 4px; border-radius: 12px;
-            margin-bottom: 15px;
+            display: flex; gap: 10px; background: rgba(0,0,0,0.05);
+            padding: 4px; border-radius: 12px; margin-bottom: 15px;
         }
 
         .tab-btn {
-            flex: 1; border: none; background: transparent;
-            padding: 8px; border-radius: 10px;
-            font-family: inherit; font-size: 0.9rem;
-            color: #636e72; cursor: pointer; transition: all 0.2s;
+            flex: 1; border: none; background: transparent; padding: 8px; border-radius: 10px;
+            font-family: inherit; font-size: 0.9rem; color: #636e72; cursor: pointer; transition: all 0.2s;
         }
+        .tab-btn.active { background: #fff; color: var(--text); box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-weight: bold; }
 
-        .tab-btn.active {
-            background: #fff; color: var(--text);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-weight: bold;
-        }
-
-        .header-row {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
-        }
-
+        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         h2 { margin: 0; font-size: 1rem; color: var(--text); }
         .subtitle { font-size: 0.8rem; color: #aaa; }
 
         .pot-list {
-            display: flex; gap: 12px; overflow-x: auto; padding: 4px;
-            scrollbar-width: none; min-height: 80px;
+            display: flex; gap: 12px; overflow-x: auto; padding: 4px; scrollbar-width: none; min-height: 80px;
         }
         .pot-list::-webkit-scrollbar { display: none; }
 
         .item-box {
-            flex: 0 0 auto; width: 70px; height: 70px;
-            border-radius: 18px; background: #fff;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.8rem; cursor: pointer;
-            border: 2px solid transparent;
-            transition: all 0.2s;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            flex: 0 0 auto; width: 70px; height: 70px; border-radius: 18px; background: #fff;
+            display: flex; align-items: center; justify-content: center; font-size: 1.8rem; cursor: pointer;
+            border: 2px solid transparent; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
+        .item-box.active { border-color: var(--primary); background: #e0f2f1; transform: scale(1.1); }
 
-        .item-box.active {
-            border-color: var(--primary); background: #e0f2f1;
-            transform: scale(1.1);
-        }
-
-        .color-picker {
-            display: flex; justify-content: center; gap: 15px; margin-top: 15px;
-        }
+        .color-picker { display: flex; justify-content: center; gap: 15px; margin-top: 15px; }
         .color-dot {
-            width: 28px; height: 28px; border-radius: 50%;
-            border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-            cursor: pointer;
+            width: 28px; height: 28px; border-radius: 50%; border: 2px solid #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2); cursor: pointer;
+        }
+
+        /* استایل اسلایدر جدید */
+        .scale-control {
+            margin-top: 20px;
+            background: rgba(0,0,0,0.03);
+            padding: 10px 15px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .scale-label { font-size: 0.8rem; color: #636e72; white-space: nowrap; font-weight: bold; }
+        input[type=range] {
+            flex: 1; accent-color: var(--primary); height: 4px; border-radius: 2px;
         }
 
         .ar-btn {
             width: 100%; margin-top: 15px; padding: 14px;
-            background: var(--primary); color: white; border: none;
-            border-radius: 16px; font-family: inherit; font-weight: bold;
-            font-size: 1rem; display: flex; align-items: center; justify-content: center;
-            gap: 8px; box-shadow: 0 8px 20px rgba(0, 184, 148, 0.3); cursor: pointer;
+            background: var(--primary); color: white; border: none; border-radius: 16px;
+            font-family: inherit; font-weight: bold; font-size: 1rem;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            box-shadow: 0 8px 20px rgba(0, 184, 148, 0.3); cursor: pointer;
         }
         
         button[slot="ar-button"] { display: none; }
@@ -164,7 +127,7 @@
             id="viewer"
             src="./pot1.glb" 
             ar
-            ar-modes="scene-viewer webxr quick-look"
+            ar-modes="webxr scene-viewer quick-look" 
             ar-scale="auto"
             camera-controls
             shadow-intensity="1"
@@ -186,6 +149,11 @@
 
         <div class="pot-list" id="itemList"></div>
 
+        <div class="scale-control">
+            <span class="scale-label" id="txt-size">اندازه اولیه:</span>
+            <input type="range" min="0.1" max="2" step="0.1" value="1" id="scaleSlider" oninput="updateScale(this.value)">
+        </div>
+
         <div class="color-picker" id="colorPickerPanel">
             <div class="color-dot" style="background: #ffffff" onclick="changeColor('#ffffff')"></div>
             <div class="color-dot" style="background: #34495e" onclick="changeColor('#34495e')"></div>
@@ -206,6 +174,7 @@
         const viewer = document.getElementById('viewer');
         const itemList = document.getElementById('itemList');
         const colorPanel = document.getElementById('colorPickerPanel');
+        const slider = document.getElementById('scaleSlider');
         
         let currentCategory = 'pots';
         let currentLang = 'fa';
@@ -216,6 +185,7 @@
                 tabCarpets: "🧶 فرش",
                 title: "انتخاب مدل",
                 subtitle: "مدل موجود",
+                size: "اندازه اولیه:",
                 btn: "مشاهده در محیط واقعی",
                 alert: "دستگاه شما از AR پشتیبانی نمی‌کند"
             },
@@ -224,6 +194,7 @@
                 tabCarpets: "🧶 Carpets",
                 title: "Select Model",
                 subtitle: "Models Available",
+                size: "Initial Size:",
                 btn: "View in your space",
                 alert: "Your device does not support AR"
             }
@@ -266,6 +237,7 @@
             document.getElementById('tab-carpets').innerText = t.tabCarpets;
             document.getElementById('txt-title').innerText = t.title;
             document.getElementById('txt-btn').innerText = t.btn;
+            document.getElementById('txt-size').innerText = t.size;
             
             const count = db[currentCategory].length;
             document.getElementById('txt-subtitle').innerText = `${count} ${t.subtitle}`;
@@ -275,6 +247,11 @@
             currentCategory = cat;
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`tab-${cat}`).classList.add('active');
+            
+            // مخفی کردن انتخاب رنگ برای فرش (اختیاری)
+            // if(cat === 'carpets') colorPanel.style.display = 'none';
+            // else colorPanel.style.display = 'flex';
+
             renderList();
             updateUIText();
         }
@@ -302,6 +279,15 @@
 
         function loadModel(src) {
             viewer.src = src;
+            // ریست کردن اسلایدر وقتی مدل عوض میشه (اختیاری)
+            slider.value = 1;
+            updateScale(1);
+        }
+
+        // تابع تغییر سایز (مهم)
+        function updateScale(val) {
+            // اعمال تغییر سایز روی مدل
+            viewer.scale = `${val} ${val} ${val}`;
         }
 
         function changeColor(hex) {
