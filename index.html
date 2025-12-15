@@ -30,7 +30,6 @@
             transition: all 0.3s ease;
         }
 
-        /* استایل حالت انگلیسی */
         body.lang-en {
             font-family: var(--font-en);
             direction: ltr;
@@ -44,6 +43,9 @@
             width: 100%; height: 100%;
             background: radial-gradient(circle at 50% 30%, #fff 0%, #b2bec3 100%);
             --poster-color: transparent;
+            
+            /* 🔥 نکته کلیدی برای حل مشکل زوم: */
+            touch-action: none; 
         }
 
         /* دکمه تغییر زبان */
@@ -86,7 +88,6 @@
             }
         }
 
-        /* تب‌ها */
         .category-tabs {
             display: flex; gap: 10px;
             background: rgba(0,0,0,0.05);
@@ -164,6 +165,7 @@
             src="./pot1.glb" 
             ar
             ar-modes="scene-viewer webxr quick-look"
+            ar-scale="auto"
             camera-controls
             shadow-intensity="1"
             shadow-softness="0.8"
@@ -172,7 +174,6 @@
     </div>
 
     <div class="control-panel">
-        
         <div class="category-tabs">
             <button class="tab-btn active" onclick="switchCategory('pots')" id="tab-pots">🏺 گلدان</button>
             <button class="tab-btn" onclick="switchCategory('carpets')" id="tab-carpets">🧶 فرش</button>
@@ -183,8 +184,7 @@
             <span class="subtitle" id="txt-subtitle">۵ مدل</span>
         </div>
 
-        <div class="pot-list" id="itemList">
-            </div>
+        <div class="pot-list" id="itemList"></div>
 
         <div class="color-picker" id="colorPickerPanel">
             <div class="color-dot" style="background: #ffffff" onclick="changeColor('#ffffff')"></div>
@@ -210,7 +210,6 @@
         let currentCategory = 'pots';
         let currentLang = 'fa';
 
-        // متون دوزبانه UI
         const translations = {
             fa: {
                 tabPots: "🏺 گلدان",
@@ -230,7 +229,6 @@
             }
         };
 
-        // دیتابیس مدل‌ها (نام‌ها دوزبانه شدند)
         const db = {
             pots: [
                 { name_fa: "گلدان ۱", name_en: "Pot 1", src: "./pot1.glb", icon: "🍍" },
@@ -240,7 +238,6 @@
                 { name_fa: "گلدان ۵", name_en: "Pot 5", src: "./pot5.glb", icon: "⛩️" }
             ],
             carpets: [
-                // اگر فایل فرش ندارید، فعلاً همین گلدان‌ها را برای تست لود می‌کند
                 { name_fa: "فرش ۱", name_en: "Carpet 1", src: "./carpet1.glb", icon: "🧶" },
                 { name_fa: "فرش ۲", name_en: "Carpet 2", src: "./carpet2.glb", icon: "🦁" },
                 { name_fa: "فرش ۳", name_en: "Carpet 3", src: "./carpet3.glb", icon: "🎨" },
@@ -249,11 +246,10 @@
             ]
         };
 
-        // تغییر زبان
         function toggleLanguage() {
             currentLang = currentLang === 'fa' ? 'en' : 'fa';
             updateUIText();
-            renderList(); // لیست را دوباره می‌سازد تا نام‌ها عوض شوند
+            renderList();
             
             if (currentLang === 'en') {
                 document.body.classList.add('lang-en');
@@ -275,22 +271,14 @@
             document.getElementById('txt-subtitle').innerText = `${count} ${t.subtitle}`;
         }
 
-        // تغییر دسته‌بندی
         function switchCategory(cat) {
             currentCategory = cat;
-            
-            // آپدیت کلاس اکتیو دکمه‌ها
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`tab-${cat}`).classList.add('active');
-
-            // مخفی کردن انتخاب رنگ برای فرش (اختیاری)
-            // colorPanel.style.display = cat === 'carpets' ? 'none' : 'flex';
-
             renderList();
             updateUIText();
         }
 
-        // ساخت لیست آیتم‌ها
         function renderList() {
             itemList.innerHTML = '';
             const data = db[currentCategory];
@@ -299,8 +287,6 @@
                 const btn = document.createElement('div');
                 const isActive = viewer.src.includes(item.src.replace('./',''));
                 btn.className = `item-box ${isActive ? 'active' : ''}`;
-                
-                // اگر هیچ مدلی لود نشده، اولی را اکتیو کن
                 if (index === 0 && !viewer.src) btn.classList.add('active');
 
                 btn.innerHTML = item.icon;
@@ -312,11 +298,6 @@
                 };
                 itemList.appendChild(btn);
             });
-            
-            // اگر مدلی لود نشده، مدل اول را لود کن
-            if (!viewer.src || (!viewer.src.includes('blob') && !viewer.src.includes(data[0].src))) {
-                 // loadModel(data[0].src); // اختیاری: لود خودکار اولین آیتم
-            }
         }
 
         function loadModel(src) {
@@ -336,7 +317,6 @@
             return [r, g, b, 1];
         }
 
-        // تابع اصلاح شده فعال‌سازی AR
         function activateARMode() {
             if (viewer.canActivateAR) {
                 viewer.activateAR();
@@ -345,7 +325,6 @@
             }
         }
 
-        // راه‌اندازی اولیه
         renderList();
     </script>
 </body>
