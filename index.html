@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AR Carpet Pro</title>
+    <title>AR Carpet Pro Max</title>
+    
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 
@@ -21,7 +22,7 @@
             width: 100%; height: 100%; 
             --poster-color: transparent; 
             background: radial-gradient(circle at 50% 50%, #dfe6e9 0%, #636e72 100%);
-            /* 🔥 مهم: این خط باعث می‌شود درگ کردن کار کند */
+            /* این خط حیاتی است برای اینکه سیستم بفهمد تاچ برای مدل است نه اسکرول */
             touch-action: none; 
         }
 
@@ -55,7 +56,8 @@
 
         .slider-container { flex: 1; display: flex; flex-direction: column; justify-content: center; }
         .slider-label { font-size: 0.8rem; color: #636e72; margin-bottom: 5px; display: flex; justify-content: space-between; }
-        input[type=range] { width: 100%; accent-color: var(--accent); height: 5px; cursor: ew-resize; }
+        /* استایل اسلایدر */
+        input[type=range] { width: 100%; accent-color: var(--accent); height: 20px; cursor: pointer; }
 
         .gallery { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
         .gallery::-webkit-scrollbar { display: none; }
@@ -75,11 +77,19 @@
             box-shadow: 0 5px 15px rgba(9, 132, 227, 0.3); cursor: pointer;
         }
         button[slot="ar-button"] { display: none; }
+        
+        /* لودر */
+        #loader {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.7); color: white; padding: 10px 20px; border-radius: 20px;
+            display: none; z-index: 50;
+        }
     </style>
 </head>
 <body>
 
     <div class="lang-btn" onclick="toggleLang()">EN / FA</div>
+    <div id="loader">Loading...</div>
 
     <div class="ar-view">
         <model-viewer 
@@ -87,11 +97,11 @@
             src="" 
             ar 
             ar-modes="webxr scene-viewer quick-look" 
+            ar-scale="fixed"
             camera-controls 
             touch-action="none" 
             shadow-intensity="0" 
             shadow-softness="0"
-            interpolation-decay="200"
             max-camera-orbit="auto 90deg auto"
             auto-rotate>
         </model-viewer>
@@ -126,6 +136,7 @@
         const listEl = document.querySelector('#list');
         const slider = document.querySelector('#scale-slider');
         const scaleVal = document.querySelector('#scale-val');
+        const loader = document.querySelector('#loader');
         
         let mode = 'pots';
         let lang = 'fa';
@@ -141,6 +152,7 @@
             pots: {
                 shadow: 1,
                 placement: 'auto',
+                // بازه اسلایدر گلدان (نرمال)
                 sliderConfig: { min: 0.1, max: 2, step: 0.1, default: 1 },
                 items: [
                     { id: 1, src: "./pot1.glb" },
@@ -153,12 +165,13 @@
             carpets: {
                 shadow: 0,
                 placement: 'floor',
-                // بازه اسلایدر
+                // بازه اسلایدر فرش (بسیار دقیق و حساس)
+                // اگر فایل شما خیلی بزرگ باشد، این اعداد کوچک آن را کنترل می‌کنند
                 sliderConfig: { 
-                    min: 0.005, 
-                    max: 0.1, 
-                    step: 0.001, 
-                    default: 0.015 
+                    min: 0.0005,  // کمترین حد (میکروسکوپی)
+                    max: 0.05,    // بیشترین حد (5 درصد سایز اصلی)
+                    step: 0.0005, 
+                    default: 0.005 // شروع با سایز کوچک
                 },
                 items: [
                     { id: 1, src: "./carpet1.glb" },
@@ -172,19 +185,20 @@
 
         function init() {
             setMode('pots');
+            // نمایش لودینگ
+            viewer.addEventListener('progress', (e) => {
+                if(e.detail.totalProgress < 1) loader.style.display = 'block';
+                else loader.style.display = 'none';
+            });
         }
 
         function toggleLang() {
             lang = lang === 'fa' ? 'en' : 'fa';
             document.body.className = lang === 'en' ? 'ltr' : '';
-            
-            // آپدیت متن‌ها
             document.getElementById('lbl-pots').innerText = txt[lang].pots;
             document.getElementById('lbl-carpets').innerText = txt[lang].carpets;
             document.getElementById('lbl-size').innerText = txt[lang].size;
             document.getElementById('lbl-btn').innerText = txt[lang].btn;
-            
-            // آپدیت لیست مدل‌ها (برای تغییر متن Model/مدل)
             renderList();
         }
 
@@ -209,7 +223,6 @@
             data.items.forEach((item, idx) => {
                 const el = document.createElement('div');
                 el.className = 'item';
-                // نمایش نام بر اساس زبان
                 el.innerText = `${txt[lang].model} ${item.id}`;
                 
                 if (idx === 0 && !viewer.src) {
@@ -234,10 +247,13 @@
         }
 
         function updateScale(val) {
+            // اعمال سایز
             viewer.scale = `${val} ${val} ${val}`;
             
+            // نمایش عدد برای کاربر
             let display;
             if (mode === 'carpets') {
+                // نمایش عدد بزرگتر برای فهم بهتر
                 display = (val * 1000).toFixed(0); 
             } else {
                 display = (val * 100).toFixed(0) + '%';
