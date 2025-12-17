@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -81,9 +82,10 @@
         const db = {
             pots: { shadow: 1, placement: 'auto', defaultScale: 1, items: [ { n_fa:"گلدان ۱", n_en:"Pot 1", src:"./pot1.glb", icon:"🪴" }, { n_fa:"گلدان ۲", n_en:"Pot 2", src:"./pot2.glb", icon:"🌵" }, { n_fa:"گلدان ۳", n_en:"Pot 3", src:"./pot3.glb", icon:"🏺" }, { n_fa:"گلدان ۴", n_en:"Pot 4", src:"./pot4.glb", icon:"🌻" }, { n_fa:"گلدان ۵", n_en:"Pot 5", src:"./pot5.glb", icon:"🎍" } ] },
             carpets: {
-                shadow: 0, placement: 'floor',
-                // 🔥 تغییر مهم: کاهش شدید ضریب مقیاس اولیه به 0.005
-                defaultScale: 0.005, 
+                // تغییرات کلیدی برای فرش:
+                shadow: 0, // حذف کامل سایه
+                placement: 'floor', // قفل روی زمین
+                defaultScale: 0.001, // کاهش شدید مقیاس اولیه به یک هزارم
                 items: [ { n_fa:"فرش ۱", n_en:"Rug 1", src:"./carpet1.glb", icon:"🧶" }, { n_fa:"فرش ۲", n_en:"Rug 2", src:"./carpet2.glb", icon:"🦁" }, { n_fa:"فرش ۳", n_en:"Rug 3", src:"./carpet3.glb", icon:"🎨" }, { n_fa:"فرش ۴", n_en:"Rug 4", src:"./carpet4.glb", icon:"💠" }, { n_fa:"فرش ۵", n_en:"Rug 5", src:"./carpet5.glb", icon:"🌷" } ]
             }
         };
@@ -102,3 +104,4 @@
     </script>
 </body>
 </html>
+
