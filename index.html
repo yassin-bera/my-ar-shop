@@ -1,20 +1,37 @@
-
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AR Carpet Master</title>
+    <title>AR Carpet Pro</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 
     <style>
         :root { --primary: #2d3436; --accent: #0984e3; --glass: rgba(255, 255, 255, 0.98); }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-        body { margin: 0; height: 100dvh; overflow: hidden; font-family: 'Vazirmatn', sans-serif; background: #b2bec3; }
+        body { margin: 0; height: 100dvh; overflow: hidden; font-family: 'Vazirmatn', sans-serif; background: #b2bec3; transition: 0.3s; }
         
+        /* استایل چپ‌چین برای انگلیسی */
+        body.ltr { direction: ltr; font-family: sans-serif; }
+
         .ar-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        model-viewer { width: 100%; height: 100%; --poster-color: transparent; background: radial-gradient(circle at 50% 50%, #dfe6e9 0%, #636e72 100%); }
+        
+        model-viewer { 
+            width: 100%; height: 100%; 
+            --poster-color: transparent; 
+            background: radial-gradient(circle at 50% 50%, #dfe6e9 0%, #636e72 100%);
+            /* 🔥 مهم: این خط باعث می‌شود درگ کردن کار کند */
+            touch-action: none; 
+        }
+
+        /* دکمه زبان */
+        .lang-btn {
+            position: absolute; top: max(20px, env(safe-area-inset-top)); right: 20px; z-index: 100;
+            background: rgba(255,255,255,0.9); padding: 8px 15px; border-radius: 20px;
+            font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-size: 0.9rem;
+        }
+        body.ltr .lang-btn { right: auto; left: 20px; }
 
         .controls {
             position: absolute; bottom: 0; left: 0; width: 100%; z-index: 10;
@@ -38,7 +55,7 @@
 
         .slider-container { flex: 1; display: flex; flex-direction: column; justify-content: center; }
         .slider-label { font-size: 0.8rem; color: #636e72; margin-bottom: 5px; display: flex; justify-content: space-between; }
-        input[type=range] { width: 100%; accent-color: var(--accent); height: 5px; }
+        input[type=range] { width: 100%; accent-color: var(--accent); height: 5px; cursor: ew-resize; }
 
         .gallery { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
         .gallery::-webkit-scrollbar { display: none; }
@@ -62,6 +79,8 @@
 </head>
 <body>
 
+    <div class="lang-btn" onclick="toggleLang()">EN / FA</div>
+
     <div class="ar-view">
         <model-viewer 
             id="viewer" 
@@ -69,9 +88,10 @@
             ar 
             ar-modes="webxr scene-viewer quick-look" 
             camera-controls 
-            touch-action="pan-y" 
+            touch-action="none" 
             shadow-intensity="0" 
             shadow-softness="0"
+            interpolation-decay="200"
             max-camera-orbit="auto 90deg auto"
             auto-rotate>
         </model-viewer>
@@ -79,15 +99,15 @@
 
     <div class="controls">
         <div class="tabs">
-            <button class="tab active" onclick="setMode('pots')">گلدان</button>
-            <button class="tab" onclick="setMode('carpets')">فرش</button>
+            <button class="tab active" onclick="setMode('pots')" id="lbl-pots">گلدان</button>
+            <button class="tab" onclick="setMode('carpets')" id="lbl-carpets">فرش</button>
         </div>
 
         <div class="tools-row">
             <button class="rotate-btn" onclick="rotate90()">🔄</button>
             <div class="slider-container">
                 <div class="slider-label">
-                    <span>اندازه</span>
+                    <span id="lbl-size">اندازه</span>
                     <span id="scale-val">100%</span>
                 </div>
                 <input type="range" id="scale-slider" oninput="updateScale(this.value)">
@@ -97,7 +117,7 @@
         <div class="gallery" id="list"></div>
 
         <button class="ar-trigger" onclick="activateAR()">
-            📷 مشاهده در محیط
+            <span id="lbl-btn">📷 مشاهده در محیط</span>
         </button>
     </div>
 
@@ -108,38 +128,44 @@
         const scaleVal = document.querySelector('#scale-val');
         
         let mode = 'pots';
+        let lang = 'fa';
         let currentRotation = 0;
+
+        // دیکشنری زبان
+        const txt = {
+            fa: { pots: "گلدان", carpets: "فرش", size: "اندازه", btn: "📷 مشاهده در محیط", model: "مدل" },
+            en: { pots: "Pots", carpets: "Carpets", size: "Size", btn: "📷 View in AR", model: "Model" }
+        };
 
         const db = {
             pots: {
                 shadow: 1,
                 placement: 'auto',
-                // تنظیمات اسلایدر گلدان
                 sliderConfig: { min: 0.1, max: 2, step: 0.1, default: 1 },
                 items: [
-                    { name: "مدل ۱", src: "./pot1.glb" },
-                    { name: "مدل ۲", src: "./pot2.glb" },
-                    { name: "مدل ۳", src: "./pot3.glb" },
-                    { name: "مدل ۴", src: "./pot4.glb" },
-                    { name: "مدل ۵", src: "./pot5.glb" }
+                    { id: 1, src: "./pot1.glb" },
+                    { id: 2, src: "./pot2.glb" },
+                    { id: 3, src: "./pot3.glb" },
+                    { id: 4, src: "./pot4.glb" },
+                    { id: 5, src: "./pot5.glb" }
                 ]
             },
             carpets: {
                 shadow: 0,
                 placement: 'floor',
-                // تنظیمات اسلایدر فرش (اصلاح شده)
+                // بازه اسلایدر
                 sliderConfig: { 
-                    min: 0.005,  // حد حداقل (دیگر ناپدید نمی‌شود)
-                    max: 0.08,   // حد حداکثر (خیلی بزرگ نمی‌شود)
+                    min: 0.005, 
+                    max: 0.1, 
                     step: 0.001, 
-                    default: 0.015 // اندازه اولیه متعادل (نه خیلی ریز، نه بزرگ)
+                    default: 0.015 
                 },
                 items: [
-                    { name: "مدل ۱", src: "./carpet1.glb" },
-                    { name: "مدل ۲", src: "./carpet2.glb" },
-                    { name: "مدل ۳", src: "./carpet3.glb" },
-                    { name: "مدل ۴", src: "./carpet4.glb" },
-                    { name: "مدل ۵", src: "./carpet5.glb" }
+                    { id: 1, src: "./carpet1.glb" },
+                    { id: 2, src: "./carpet2.glb" },
+                    { id: 3, src: "./carpet3.glb" },
+                    { id: 4, src: "./carpet4.glb" },
+                    { id: 5, src: "./carpet5.glb" }
                 ]
             }
         };
@@ -148,17 +174,31 @@
             setMode('pots');
         }
 
+        function toggleLang() {
+            lang = lang === 'fa' ? 'en' : 'fa';
+            document.body.className = lang === 'en' ? 'ltr' : '';
+            
+            // آپدیت متن‌ها
+            document.getElementById('lbl-pots').innerText = txt[lang].pots;
+            document.getElementById('lbl-carpets').innerText = txt[lang].carpets;
+            document.getElementById('lbl-size').innerText = txt[lang].size;
+            document.getElementById('lbl-btn').innerText = txt[lang].btn;
+            
+            // آپدیت لیست مدل‌ها (برای تغییر متن Model/مدل)
+            renderList();
+        }
+
         function setMode(m) {
             mode = m;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event ? event.target.classList.add('active') : document.querySelector('.tab').classList.add('active');
+            const targetId = m === 'pots' ? 'lbl-pots' : 'lbl-carpets';
+            document.getElementById(targetId).classList.add('active');
             
-            // اعمال تنظیمات اسلایدر
             const config = db[mode].sliderConfig;
             slider.min = config.min;
             slider.max = config.max;
             slider.step = config.step;
-            slider.value = config.default; // برگرداندن به سایز استاندارد هنگام تغییر تب
+            slider.value = config.default;
 
             renderList();
         }
@@ -169,8 +209,8 @@
             data.items.forEach((item, idx) => {
                 const el = document.createElement('div');
                 el.className = 'item';
-                // متن به جای آیکون
-                el.innerText = item.name;
+                // نمایش نام بر اساس زبان
+                el.innerText = `${txt[lang].model} ${item.id}`;
                 
                 if (idx === 0 && !viewer.src) {
                     el.classList.add('active');
@@ -190,17 +230,14 @@
             viewer.src = item.src;
             viewer.shadowIntensity = config.shadow;
             viewer.setAttribute('ar-placement', config.placement);
-            
-            // اعمال سایز اسلایدر
             updateScale(slider.value);
         }
 
         function updateScale(val) {
             viewer.scale = `${val} ${val} ${val}`;
-            // نمایش عدد خوانا برای کاربر
+            
             let display;
             if (mode === 'carpets') {
-                // برای فرش عدد را رند و بزرگتر نشان می‌دهیم که گیج کننده نباشد
                 display = (val * 1000).toFixed(0); 
             } else {
                 display = (val * 100).toFixed(0) + '%';
@@ -215,7 +252,7 @@
 
         function activateAR() {
             if (viewer.canActivateAR) viewer.activateAR();
-            else alert("دستگاه پشتیبانی نمی‌کند");
+            else alert(lang === 'fa' ? "دستگاه پشتیبانی نمی‌کند" : "Device not supported");
         }
 
         init();
