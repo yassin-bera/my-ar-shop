@@ -62,7 +62,7 @@
         <div class="list" id="list"></div>
         <div class="size-ctrl">
             <span class="size-lbl" id="txt-size">سایز: 100%</span>
-            <input type="range" min="0.01" max="2" step="0.01" value="1" id="slider" oninput="onSizeChange(this.value)">
+            <input type="range" min="0.001" max="2" step="0.001" value="1" id="slider" oninput="onSizeChange(this.value)">
         </div>
         <div class="colors" id="colors" style="display: flex;">
             <div class="color" style="background:#fff" onclick="setColor('#ffffff')"></div>
@@ -82,8 +82,8 @@
             pots: { shadow: 1, placement: 'auto', defaultScale: 1, items: [ { n_fa:"گلدان ۱", n_en:"Pot 1", src:"./pot1.glb", icon:"🪴" }, { n_fa:"گلدان ۲", n_en:"Pot 2", src:"./pot2.glb", icon:"🌵" }, { n_fa:"گلدان ۳", n_en:"Pot 3", src:"./pot3.glb", icon:"🏺" }, { n_fa:"گلدان ۴", n_en:"Pot 4", src:"./pot4.glb", icon:"🌻" }, { n_fa:"گلدان ۵", n_en:"Pot 5", src:"./pot5.glb", icon:"🎍" } ] },
             carpets: {
                 shadow: 0, placement: 'floor',
-                // 🔥 تغییر مهم: فرش ۱۰۰ برابر کوچک می‌شود!
-                defaultScale: 0.01, 
+                // 🔥 تغییر مهم: کاهش شدید ضریب مقیاس اولیه به 0.005
+                defaultScale: 0.005, 
                 items: [ { n_fa:"فرش ۱", n_en:"Rug 1", src:"./carpet1.glb", icon:"🧶" }, { n_fa:"فرش ۲", n_en:"Rug 2", src:"./carpet2.glb", icon:"🦁" }, { n_fa:"فرش ۳", n_en:"Rug 3", src:"./carpet3.glb", icon:"🎨" }, { n_fa:"فرش ۴", n_en:"Rug 4", src:"./carpet4.glb", icon:"💠" }, { n_fa:"فرش ۵", n_en:"Rug 5", src:"./carpet5.glb", icon:"🌷" } ]
             }
         };
@@ -93,7 +93,7 @@
         function renderList() { list.innerHTML = ''; const config = db[cat]; config.items.forEach((item, idx) => { const el = document.createElement('div'); el.className = `item ${idx===0 && !viewer.src ? 'active' : ''}`; if(viewer.src && viewer.src.includes(item.src.replace('./',''))) el.classList.add('active'); el.innerHTML = item.icon; el.onclick = () => loadItem(item, el, config); list.appendChild(el); if(idx === 0 && !viewer.src) loadItem(item, el, config); }); }
         function loadItem(item, el, config) { loader.style.display = 'block'; document.querySelectorAll('.item').forEach(i => i.classList.remove('active')); el.classList.add('active'); viewer.src = item.src; viewer.shadowIntensity = config.shadow; viewer.setAttribute('ar-placement', config.placement); const scale = config.defaultScale; currentScale = scale; viewer.scale = `${scale} ${scale} ${scale}`; slider.value = scale; updateSizeText(scale); }
         function onSizeChange(val) { currentScale = val; viewer.scale = `${val} ${val} ${val}`; updateSizeText(val); }
-        function updateSizeText(val) { const percent = Math.round(val * 100); const lbl = lang === 'fa' ? `سایز: ${percent}%` : `Size: ${percent}%`; sizeLbl.innerText = lbl; }
+        function updateSizeText(val) { const percent = (val * 100).toFixed(1); const lbl = lang === 'fa' ? `سایز: ${percent}%` : `Size: ${percent}%`; sizeLbl.innerText = lbl; }
         function setColor(hex) { if(!viewer.model) return; const mat = viewer.model.materials[0]; if(mat) mat.pbrMetallicRoughness.setBaseColorFactor(hexToRgb(hex)); }
         function startAR() { if(viewer.canActivateAR) { viewer.activateAR(); } else { alert(lang==='fa' ? 'دستگاه پشتیبانی نمی‌کند' : 'Device not supported'); } }
         function toggleLang() { lang = lang === 'fa' ? 'en' : 'fa'; document.body.className = lang === 'en' ? 'lang-en' : ''; const t = txt[lang]; document.getElementById('t-pots').innerText = t.t_p; document.getElementById('t-carpets').innerText = t.t_c; document.getElementById('txt-title').innerText = t.h; document.getElementById('txt-btn').innerText = t.b; updateSizeText(currentScale); }
