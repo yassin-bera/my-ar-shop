@@ -10,315 +10,94 @@
 
     <style>
         :root {
-            --primary: #00b894;
-            --surface: rgba(255, 255, 255, 0.95);
-            --blur: blur(20px);
-            --font-fa: 'Vazirmatn', sans-serif;
-            --font-en: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --primary: #00b894; --surface: rgba(255, 255, 255, 0.95); --blur: blur(20px);
+            --font-fa: 'Vazirmatn', sans-serif; --font-en: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
-
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-
-        body {
-            margin: 0; height: 100dvh; width: 100vw; overflow: hidden;
-            font-family: var(--font-fa); background-color: #b2bec3;
-        }
+        body { margin: 0; height: 100dvh; width: 100vw; overflow: hidden; font-family: var(--font-fa); background-color: #b2bec3; }
         body.lang-en { font-family: var(--font-en); direction: ltr; }
-
-        /* کانتینر اصلی */
-        .viewer-wrap {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
-        }
-
-        model-viewer {
-            width: 100%; height: 100%;
-            /* گرادینت برای نمایش بهتر */
-            background: radial-gradient(circle at 50% 50%, #f5f6fa 0%, #dcdde1 100%);
-            --poster-color: transparent;
-            /* جلوگیری از تداخل تاچ */
-            touch-action: none; 
-        }
-
-        /* لودینگ */
-        .loader {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 50px; height: 50px; border: 5px solid #ddd;
-            border-top-color: var(--primary); border-radius: 50%;
-            animation: spin 1s linear infinite; display: none; z-index: 5;
-        }
+        .viewer-wrap { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        model-viewer { width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #f5f6fa 0%, #dcdde1 100%); --poster-color: transparent; touch-action: none; }
+        .loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50px; height: 50px; border: 5px solid #ddd; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; display: none; z-index: 5; }
         @keyframes spin { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
-
-        /* دکمه زبان */
-        .lang-btn {
-            position: absolute; top: max(20px, env(safe-area-inset-top)); right: 20px; z-index: 100;
-            background: rgba(255,255,255,0.8); padding: 8px 12px; border-radius: 12px;
-            font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
+        .lang-btn { position: absolute; top: max(20px, env(safe-area-inset-top)); right: 20px; z-index: 100; background: rgba(255,255,255,0.8); padding: 8px 12px; border-radius: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         body.lang-en .lang-btn { right: auto; left: 20px; }
-
-        /* پنل کنترل */
-        .panel {
-            position: absolute; bottom: 0; left: 0; width: 100%; z-index: 20;
-            background: var(--surface); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
-            padding: 20px; padding-bottom: max(20px, env(safe-area-inset-bottom));
-            border-radius: 24px 24px 0 0;
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.15);
-            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-        }
+        .panel { position: absolute; bottom: 0; left: 0; width: 100%; z-index: 20; background: var(--surface); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); padding: 20px; padding-bottom: max(20px, env(safe-area-inset-bottom)); border-radius: 24px 24px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,0.15); transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); }
         @media (min-width: 768px) { .panel { width: 400px; left: 50%; bottom: 20px; transform: translateX(-50%); border-radius: 24px; } }
-
-        /* تب‌ها */
         .tabs { display: flex; gap: 8px; background: rgba(0,0,0,0.06); padding: 5px; border-radius: 14px; margin-bottom: 15px; }
         .tab { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 10px; font-family: inherit; font-size: 0.95rem; color: #636e72; cursor: pointer; transition: 0.2s; }
         .tab.active { background: #fff; color: #2d3436; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-
-        /* اطلاعات محصول */
         .info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .info h3 { margin: 0; font-size: 1.1rem; }
         .info span { font-size: 0.8rem; color: #888; }
-
-        /* لیست افقی */
         .list { display: flex; gap: 12px; overflow-x: auto; padding: 4px; scrollbar-width: none; min-height: 85px; }
         .list::-webkit-scrollbar { display: none; }
-        
-        .item {
-            flex: 0 0 auto; width: 75px; height: 75px; background: #fff; border-radius: 18px;
-            display: flex; align-items: center; justify-content: center; font-size: 2rem;
-            border: 2px solid transparent; transition: 0.2s; cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
+        .item { flex: 0 0 auto; width: 75px; height: 75px; background: #fff; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 2rem; border: 2px solid transparent; transition: 0.2s; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .item.active { border-color: var(--primary); background: #e0f2f1; transform: translateY(-3px); }
-
-        /* اسلایدر سایز */
-        .size-ctrl {
-            margin-top: 15px; background: rgba(0,0,0,0.04); padding: 12px; border-radius: 12px;
-            display: flex; align-items: center; gap: 10px;
-        }
+        .size-ctrl { margin-top: 15px; background: rgba(0,0,0,0.04); padding: 12px; border-radius: 12px; display: flex; align-items: center; gap: 10px; }
         .size-lbl { font-size: 0.85rem; font-weight: bold; white-space: nowrap; width: 80px; }
         input[type=range] { width: 100%; accent-color: var(--primary); }
-
-        /* دکمه AR */
-        .ar-btn {
-            width: 100%; margin-top: 15px; padding: 16px; border: none; border-radius: 16px;
-            background: linear-gradient(135deg, #00b894, #00cec9); color: white;
-            font-family: inherit; font-weight: 800; font-size: 1rem; cursor: pointer;
-            box-shadow: 0 8px 25px rgba(0, 184, 148, 0.4); display: flex; justify-content: center; gap: 8px;
-        }
+        .ar-btn { width: 100%; margin-top: 15px; padding: 16px; border: none; border-radius: 16px; background: linear-gradient(135deg, #00b894, #00cec9); color: white; font-family: inherit; font-weight: 800; font-size: 1rem; cursor: pointer; box-shadow: 0 8px 25px rgba(0, 184, 148, 0.4); display: flex; justify-content: center; gap: 8px; }
         .ar-btn:active { transform: scale(0.98); }
-        
-        /* دکمه رنگ (فقط گلدان) */
         .colors { display: flex; justify-content: center; gap: 10px; margin-top: 15px; }
         .color { width: 30px; height: 30px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 3px 8px rgba(0,0,0,0.2); cursor: pointer; }
-
         button[slot="ar-button"] { display: none; }
     </style>
 </head>
 <body>
-
     <div class="lang-btn" onclick="toggleLang()">EN / FA</div>
     <div class="loader" id="loader"></div>
-
     <div class="viewer-wrap">
-        <model-viewer 
-            id="viewer"
-            src="./pot1.glb" 
-            ar
-            ar-modes="webxr quick-look scene-viewer" 
-            ar-scale="auto"
-            camera-controls
-            shadow-intensity="1"
-            shadow-softness="0.5"
-            loading="eager"
-            auto-rotate>
-        </model-viewer>
+        <model-viewer id="viewer" src="./pot1.glb" ar ar-modes="webxr quick-look scene-viewer" ar-scale="auto" camera-controls shadow-intensity="1" shadow-softness="0.5" loading="eager" auto-rotate></model-viewer>
     </div>
-
     <div class="panel">
         <div class="tabs">
             <button class="tab active" onclick="setCat('pots')" id="t-pots">🏺 گلدان</button>
             <button class="tab" onclick="setCat('carpets')" id="t-carpets">🧶 فرش</button>
         </div>
-
         <div class="info">
             <h3 id="txt-title">انتخاب مدل</h3>
             <span id="txt-sub">5 items</span>
         </div>
-
         <div class="list" id="list"></div>
-
         <div class="size-ctrl">
             <span class="size-lbl" id="txt-size">سایز: 100%</span>
             <input type="range" min="0.01" max="2" step="0.01" value="1" id="slider" oninput="onSizeChange(this.value)">
         </div>
-
         <div class="colors" id="colors" style="display: flex;">
             <div class="color" style="background:#fff" onclick="setColor('#ffffff')"></div>
             <div class="color" style="background:#2d3436" onclick="setColor('#2d3436')"></div>
             <div class="color" style="background:#e84393" onclick="setColor('#e84393')"></div>
             <div class="color" style="background:#fdcb6e" onclick="setColor('#fdcb6e')"></div>
         </div>
-
         <button class="ar-btn" onclick="startAR()">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
             <span id="txt-btn">مشاهده در محیط</span>
         </button>
     </div>
-
     <script>
-        const viewer = document.getElementById('viewer');
-        const list = document.getElementById('list');
-        const slider = document.getElementById('slider');
-        const sizeLbl = document.getElementById('txt-size');
-        const loader = document.getElementById('loader');
-        
-        let cat = 'pots';
-        let lang = 'fa';
-        let currentScale = 1;
-
-        // دیتابیس هوشمند
+        const viewer = document.getElementById('viewer'); const list = document.getElementById('list'); const slider = document.getElementById('slider'); const sizeLbl = document.getElementById('txt-size'); const loader = document.getElementById('loader');
+        let cat = 'pots'; let lang = 'fa'; let currentScale = 1;
         const db = {
-            pots: {
-                shadow: 1,
-                placement: 'auto',
-                // گلدان معمولا سایز درستی دارد (ضریب 1)
-                defaultScale: 1, 
-                items: [
-                    { n_fa:"گلدان ۱", n_en:"Pot 1", src:"./pot1.glb", icon:"🪴" },
-                    { n_fa:"گلدان ۲", n_en:"Pot 2", src:"./pot2.glb", icon:"🌵" },
-                    { n_fa:"گلدان ۳", n_en:"Pot 3", src:"./pot3.glb", icon:"🏺" },
-                    { n_fa:"گلدان ۴", n_en:"Pot 4", src:"./pot4.glb", icon:"🌻" },
-                    { n_fa:"گلدان ۵", n_en:"Pot 5", src:"./pot5.glb", icon:"🎍" }
-                ]
-            },
+            pots: { shadow: 1, placement: 'auto', defaultScale: 1, items: [ { n_fa:"گلدان ۱", n_en:"Pot 1", src:"./pot1.glb", icon:"🪴" }, { n_fa:"گلدان ۲", n_en:"Pot 2", src:"./pot2.glb", icon:"🌵" }, { n_fa:"گلدان ۳", n_en:"Pot 3", src:"./pot3.glb", icon:"🏺" }, { n_fa:"گلدان ۴", n_en:"Pot 4", src:"./pot4.glb", icon:"🌻" }, { n_fa:"گلدان ۵", n_en:"Pot 5", src:"./pot5.glb", icon:"🎍" } ] },
             carpets: {
-                shadow: 0, // حذف سایه برای چسبیدن به زمین
-                placement: 'floor', // قفل روی زمین
-                // نکته طلایی: فرش را به طور پیش‌فرض 50 برابر کوچک می‌کنیم (0.02)
-                // اگر فرش‌هایتان خیلی بزرگ است این عدد را 0.01 کنید
-                defaultScale: 0.05, 
-                items: [
-                    { n_fa:"فرش ۱", n_en:"Rug 1", src:"./carpet1.glb", icon:"🧶" },
-                    { n_fa:"فرش ۲", n_en:"Rug 2", src:"./carpet2.glb", icon:"🦁" },
-                    { n_fa:"فرش ۳", n_en:"Rug 3", src:"./carpet3.glb", icon:"🎨" },
-                    { n_fa:"فرش ۴", n_en:"Rug 4", src:"./carpet4.glb", icon:"💠" },
-                    { n_fa:"فرش ۵", n_en:"Rug 5", src:"./carpet5.glb", icon:"🌷" }
-                ]
+                shadow: 0, placement: 'floor',
+                // 🔥 تغییر مهم: فرش ۱۰۰ برابر کوچک می‌شود!
+                defaultScale: 0.01, 
+                items: [ { n_fa:"فرش ۱", n_en:"Rug 1", src:"./carpet1.glb", icon:"🧶" }, { n_fa:"فرش ۲", n_en:"Rug 2", src:"./carpet2.glb", icon:"🦁" }, { n_fa:"فرش ۳", n_en:"Rug 3", src:"./carpet3.glb", icon:"🎨" }, { n_fa:"فرش ۴", n_en:"Rug 4", src:"./carpet4.glb", icon:"💠" }, { n_fa:"فرش ۵", n_en:"Rug 5", src:"./carpet5.glb", icon:"🌷" } ]
             }
         };
-
-        const txt = {
-            fa: { t_p:"گلدان", t_c:"فرش", h:"انتخاب مدل", sz:"سایز:", b:"مشاهده در محیط" },
-            en: { t_p:"Pots", t_c:"Carpets", h:"Select Model", sz:"Size:", b:"View in AR" }
-        };
-
-        function init() {
-            setCat('pots');
-            // رویداد برای مخفی کردن لودر وقتی مدل لود شد
-            viewer.addEventListener('load', () => loader.style.display = 'none');
-            viewer.addEventListener('progress', () => loader.style.display = 'block');
-        }
-
-        function setCat(c) {
-            cat = c;
-            // آپدیت تب‌ها
-            document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-            document.getElementById(c === 'pots' ? 't-pots' : 't-carpets').classList.add('active');
-            
-            // مخفی/نمایش رنگ‌ها
-            document.getElementById('colors').style.display = c === 'pots' ? 'flex' : 'none';
-
-            renderList();
-        }
-
-        function renderList() {
-            list.innerHTML = '';
-            const config = db[cat];
-            
-            config.items.forEach((item, idx) => {
-                const el = document.createElement('div');
-                el.className = `item ${idx===0 && !viewer.src ? 'active' : ''}`;
-                // چک کردن مدل فعلی
-                if(viewer.src && viewer.src.includes(item.src.replace('./',''))) el.classList.add('active');
-
-                el.innerHTML = item.icon;
-                el.onclick = () => loadItem(item, el, config);
-                list.appendChild(el);
-
-                // لود خودکار اولی
-                if(idx === 0 && !viewer.src) loadItem(item, el, config);
-            });
-        }
-
-        function loadItem(item, el, config) {
-            loader.style.display = 'block';
-            
-            // هایلایت کردن آیتم
-            document.querySelectorAll('.item').forEach(i => i.classList.remove('active'));
-            el.classList.add('active');
-
-            // تنظیمات Viewer
-            viewer.src = item.src;
-            viewer.shadowIntensity = config.shadow;
-            viewer.setAttribute('ar-placement', config.placement);
-
-            // اعمال سایز اصلاح شده (Correction)
-            // این خط فرش را مجبور می‌کند کوچک شود
-            const scale = config.defaultScale;
-            currentScale = scale;
-            viewer.scale = `${scale} ${scale} ${scale}`;
-            
-            // آپدیت اسلایدر
-            slider.value = scale;
-            updateSizeText(scale);
-        }
-
-        function onSizeChange(val) {
-            currentScale = val;
-            viewer.scale = `${val} ${val} ${val}`;
-            updateSizeText(val);
-        }
-
-        function updateSizeText(val) {
-            // نمایش درصد برای فهم بهتر کاربر
-            const percent = Math.round(val * 100);
-            const lbl = lang === 'fa' ? `سایز: ${percent}%` : `Size: ${percent}%`;
-            sizeLbl.innerText = lbl;
-        }
-
-        function setColor(hex) {
-            if(!viewer.model) return;
-            const mat = viewer.model.materials[0];
-            if(mat) mat.pbrMetallicRoughness.setBaseColorFactor(hexToRgb(hex));
-        }
-
-        function startAR() {
-            if(viewer.canActivateAR) {
-                // تلاش برای فعال‌سازی
-                viewer.activateAR();
-            } else {
-                alert(lang==='fa' ? 'دستگاه پشتیبانی نمی‌کند' : 'Device not supported');
-            }
-        }
-
-        function toggleLang() {
-            lang = lang === 'fa' ? 'en' : 'fa';
-            document.body.className = lang === 'en' ? 'lang-en' : '';
-            
-            const t = txt[lang];
-            document.getElementById('t-pots').innerText = t.t_p;
-            document.getElementById('t-carpets').innerText = t.t_c;
-            document.getElementById('txt-title').innerText = t.h;
-            document.getElementById('txt-btn').innerText = t.b;
-            updateSizeText(currentScale);
-        }
-
-        function hexToRgb(hex) {
-            const r = parseInt(hex.slice(1, 3), 16) / 255;
-            const g = parseInt(hex.slice(3, 5), 16) / 255;
-            const b = parseInt(hex.slice(5, 7), 16) / 255;
-            return [r, g, b, 1];
-        }
-
+        const txt = { fa: { t_p:"گلدان", t_c:"فرش", h:"انتخاب مدل", sz:"سایز:", b:"مشاهده در محیط" }, en: { t_p:"Pots", t_c:"Carpets", h:"Select Model", sz:"Size:", b:"View in AR" } };
+        function init() { setCat('pots'); viewer.addEventListener('load', () => loader.style.display = 'none'); viewer.addEventListener('progress', () => loader.style.display = 'block'); }
+        function setCat(c) { cat = c; document.querySelectorAll('.tab').forEach(b => b.classList.remove('active')); document.getElementById(c === 'pots' ? 't-pots' : 't-carpets').classList.add('active'); document.getElementById('colors').style.display = c === 'pots' ? 'flex' : 'none'; renderList(); }
+        function renderList() { list.innerHTML = ''; const config = db[cat]; config.items.forEach((item, idx) => { const el = document.createElement('div'); el.className = `item ${idx===0 && !viewer.src ? 'active' : ''}`; if(viewer.src && viewer.src.includes(item.src.replace('./',''))) el.classList.add('active'); el.innerHTML = item.icon; el.onclick = () => loadItem(item, el, config); list.appendChild(el); if(idx === 0 && !viewer.src) loadItem(item, el, config); }); }
+        function loadItem(item, el, config) { loader.style.display = 'block'; document.querySelectorAll('.item').forEach(i => i.classList.remove('active')); el.classList.add('active'); viewer.src = item.src; viewer.shadowIntensity = config.shadow; viewer.setAttribute('ar-placement', config.placement); const scale = config.defaultScale; currentScale = scale; viewer.scale = `${scale} ${scale} ${scale}`; slider.value = scale; updateSizeText(scale); }
+        function onSizeChange(val) { currentScale = val; viewer.scale = `${val} ${val} ${val}`; updateSizeText(val); }
+        function updateSizeText(val) { const percent = Math.round(val * 100); const lbl = lang === 'fa' ? `سایز: ${percent}%` : `Size: ${percent}%`; sizeLbl.innerText = lbl; }
+        function setColor(hex) { if(!viewer.model) return; const mat = viewer.model.materials[0]; if(mat) mat.pbrMetallicRoughness.setBaseColorFactor(hexToRgb(hex)); }
+        function startAR() { if(viewer.canActivateAR) { viewer.activateAR(); } else { alert(lang==='fa' ? 'دستگاه پشتیبانی نمی‌کند' : 'Device not supported'); } }
+        function toggleLang() { lang = lang === 'fa' ? 'en' : 'fa'; document.body.className = lang === 'en' ? 'lang-en' : ''; const t = txt[lang]; document.getElementById('t-pots').innerText = t.t_p; document.getElementById('t-carpets').innerText = t.t_c; document.getElementById('txt-title').innerText = t.h; document.getElementById('txt-btn').innerText = t.b; updateSizeText(currentScale); }
+        function hexToRgb(hex) { const r = parseInt(hex.slice(1, 3), 16) / 255; const g = parseInt(hex.slice(3, 5), 16) / 255; const b = parseInt(hex.slice(5, 7), 16) / 255; return [r, g, b, 1]; }
         init();
     </script>
 </body>
