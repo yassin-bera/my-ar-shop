@@ -3,297 +3,313 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AR Gallery</title>
+    <title>AR Gallery Pro</title>
     
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 
     <style>
         :root {
             --primary: #00b894;
             --surface: rgba(255, 255, 255, 0.95);
             --blur: blur(20px);
-            --text: #2d3436;
             --font-fa: 'Vazirmatn', sans-serif;
-            --font-en: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-en: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
 
         body {
             margin: 0; height: 100dvh; width: 100vw; overflow: hidden;
-            font-family: var(--font-fa); background-color: #dfe6e9; transition: all 0.3s ease;
+            font-family: var(--font-fa); background-color: #b2bec3;
         }
-
         body.lang-en { font-family: var(--font-en); direction: ltr; }
 
-        .viewer-container {
-            width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1;
+        /* کانتینر اصلی */
+        .viewer-wrap {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
         }
 
         model-viewer {
             width: 100%; height: 100%;
-            background: radial-gradient(circle at 50% 30%, #fff 0%, #b2bec3 100%);
+            /* گرادینت برای نمایش بهتر */
+            background: radial-gradient(circle at 50% 50%, #f5f6fa 0%, #dcdde1 100%);
             --poster-color: transparent;
+            /* جلوگیری از تداخل تاچ */
             touch-action: none; 
         }
 
-        .lang-switch {
-            position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 20px; z-index: 50;
-            background: rgba(255,255,255,0.6); backdrop-filter: blur(4px);
-            padding: 8px 12px; border-radius: 12px; font-weight: bold; font-size: 0.9rem;
-            cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: transform 0.2s;
+        /* لودینگ */
+        .loader {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 50px; height: 50px; border: 5px solid #ddd;
+            border-top-color: var(--primary); border-radius: 50%;
+            animation: spin 1s linear infinite; display: none; z-index: 5;
         }
-        body.lang-en .lang-switch { right: auto; left: 20px; }
-        .lang-switch:active { transform: scale(0.95); }
+        @keyframes spin { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
 
-        .control-panel {
+        /* دکمه زبان */
+        .lang-btn {
+            position: absolute; top: max(20px, env(safe-area-inset-top)); right: 20px; z-index: 100;
+            background: rgba(255,255,255,0.8); padding: 8px 12px; border-radius: 12px;
+            font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        body.lang-en .lang-btn { right: auto; left: 20px; }
+
+        /* پنل کنترل */
+        .panel {
             position: absolute; bottom: 0; left: 0; width: 100%; z-index: 20;
             background: var(--surface); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
             padding: 20px; padding-bottom: max(20px, env(safe-area-inset-bottom));
-            border-top-left-radius: 24px; border-top-right-radius: 24px;
-            box-shadow: 0 -5px 30px rgba(0,0,0,0.1); transition: transform 0.3s ease;
+            border-radius: 24px 24px 0 0;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.15);
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
         }
+        @media (min-width: 768px) { .panel { width: 400px; left: 50%; bottom: 20px; transform: translateX(-50%); border-radius: 24px; } }
 
-        @media (min-width: 768px) {
-            .control-panel { width: 400px; left: 50%; bottom: 20px; transform: translateX(-50%); border-radius: 24px; }
-        }
+        /* تب‌ها */
+        .tabs { display: flex; gap: 8px; background: rgba(0,0,0,0.06); padding: 5px; border-radius: 14px; margin-bottom: 15px; }
+        .tab { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 10px; font-family: inherit; font-size: 0.95rem; color: #636e72; cursor: pointer; transition: 0.2s; }
+        .tab.active { background: #fff; color: #2d3436; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
-        .category-tabs {
-            display: flex; gap: 10px; background: rgba(0,0,0,0.05);
-            padding: 4px; border-radius: 12px; margin-bottom: 15px;
-        }
+        /* اطلاعات محصول */
+        .info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .info h3 { margin: 0; font-size: 1.1rem; }
+        .info span { font-size: 0.8rem; color: #888; }
 
-        .tab-btn {
-            flex: 1; border: none; background: transparent; padding: 8px; border-radius: 10px;
-            font-family: inherit; font-size: 0.9rem; color: #636e72; cursor: pointer; transition: all 0.2s;
-        }
-        .tab-btn.active { background: #fff; color: var(--text); box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-weight: bold; }
-
-        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        h2 { margin: 0; font-size: 1rem; color: var(--text); }
-        .subtitle { font-size: 0.8rem; color: #aaa; }
-
-        .pot-list {
-            display: flex; gap: 12px; overflow-x: auto; padding: 4px; scrollbar-width: none; min-height: 80px;
-        }
-        .pot-list::-webkit-scrollbar { display: none; }
-
-        .item-box {
-            flex: 0 0 auto; width: 70px; height: 70px; border-radius: 18px; background: #fff;
-            display: flex; align-items: center; justify-content: center; font-size: 1.8rem; cursor: pointer;
-            border: 2px solid transparent; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        .item-box.active { border-color: var(--primary); background: #e0f2f1; transform: scale(1.1); }
-
-        .color-picker { display: flex; justify-content: center; gap: 15px; margin-top: 15px; }
-        .color-dot {
-            width: 28px; height: 28px; border-radius: 50%; border: 2px solid #fff;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2); cursor: pointer;
-        }
-
-        /* استایل اسلایدر جدید */
-        .scale-control {
-            margin-top: 20px;
-            background: rgba(0,0,0,0.03);
-            padding: 10px 15px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .scale-label { font-size: 0.8rem; color: #636e72; white-space: nowrap; font-weight: bold; }
-        input[type=range] {
-            flex: 1; accent-color: var(--primary); height: 4px; border-radius: 2px;
-        }
-
-        .ar-btn {
-            width: 100%; margin-top: 15px; padding: 14px;
-            background: var(--primary); color: white; border: none; border-radius: 16px;
-            font-family: inherit; font-weight: bold; font-size: 1rem;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            box-shadow: 0 8px 20px rgba(0, 184, 148, 0.3); cursor: pointer;
-        }
+        /* لیست افقی */
+        .list { display: flex; gap: 12px; overflow-x: auto; padding: 4px; scrollbar-width: none; min-height: 85px; }
+        .list::-webkit-scrollbar { display: none; }
         
+        .item {
+            flex: 0 0 auto; width: 75px; height: 75px; background: #fff; border-radius: 18px;
+            display: flex; align-items: center; justify-content: center; font-size: 2rem;
+            border: 2px solid transparent; transition: 0.2s; cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .item.active { border-color: var(--primary); background: #e0f2f1; transform: translateY(-3px); }
+
+        /* اسلایدر سایز */
+        .size-ctrl {
+            margin-top: 15px; background: rgba(0,0,0,0.04); padding: 12px; border-radius: 12px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .size-lbl { font-size: 0.85rem; font-weight: bold; white-space: nowrap; width: 80px; }
+        input[type=range] { width: 100%; accent-color: var(--primary); }
+
+        /* دکمه AR */
+        .ar-btn {
+            width: 100%; margin-top: 15px; padding: 16px; border: none; border-radius: 16px;
+            background: linear-gradient(135deg, #00b894, #00cec9); color: white;
+            font-family: inherit; font-weight: 800; font-size: 1rem; cursor: pointer;
+            box-shadow: 0 8px 25px rgba(0, 184, 148, 0.4); display: flex; justify-content: center; gap: 8px;
+        }
+        .ar-btn:active { transform: scale(0.98); }
+        
+        /* دکمه رنگ (فقط گلدان) */
+        .colors { display: flex; justify-content: center; gap: 10px; margin-top: 15px; }
+        .color { width: 30px; height: 30px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 3px 8px rgba(0,0,0,0.2); cursor: pointer; }
+
         button[slot="ar-button"] { display: none; }
     </style>
 </head>
 <body>
 
-    <div class="lang-switch" onclick="toggleLanguage()">EN / FA</div>
+    <div class="lang-btn" onclick="toggleLang()">EN / FA</div>
+    <div class="loader" id="loader"></div>
 
-    <div class="viewer-container">
+    <div class="viewer-wrap">
         <model-viewer 
             id="viewer"
             src="./pot1.glb" 
             ar
-            ar-modes="webxr scene-viewer quick-look" 
+            ar-modes="webxr quick-look scene-viewer" 
             ar-scale="auto"
             camera-controls
             shadow-intensity="1"
-            shadow-softness="0.8"
+            shadow-softness="0.5"
+            loading="eager"
             auto-rotate>
         </model-viewer>
     </div>
 
-    <div class="control-panel">
-        <div class="category-tabs">
-            <button class="tab-btn active" onclick="switchCategory('pots')" id="tab-pots">🏺 گلدان</button>
-            <button class="tab-btn" onclick="switchCategory('carpets')" id="tab-carpets">🧶 فرش</button>
+    <div class="panel">
+        <div class="tabs">
+            <button class="tab active" onclick="setCat('pots')" id="t-pots">🏺 گلدان</button>
+            <button class="tab" onclick="setCat('carpets')" id="t-carpets">🧶 فرش</button>
         </div>
 
-        <div class="header-row">
-            <h2 id="txt-title">انتخاب مدل</h2>
-            <span class="subtitle" id="txt-subtitle">۵ مدل</span>
+        <div class="info">
+            <h3 id="txt-title">انتخاب مدل</h3>
+            <span id="txt-sub">5 items</span>
         </div>
 
-        <div class="pot-list" id="itemList"></div>
+        <div class="list" id="list"></div>
 
-        <div class="scale-control">
-            <span class="scale-label" id="txt-size">اندازه اولیه:</span>
-            <input type="range" min="0.1" max="2" step="0.1" value="1" id="scaleSlider" oninput="updateScale(this.value)">
+        <div class="size-ctrl">
+            <span class="size-lbl" id="txt-size">سایز: 100%</span>
+            <input type="range" min="0.01" max="2" step="0.01" value="1" id="slider" oninput="onSizeChange(this.value)">
         </div>
 
-        <div class="color-picker" id="colorPickerPanel">
-            <div class="color-dot" style="background: #ffffff" onclick="changeColor('#ffffff')"></div>
-            <div class="color-dot" style="background: #34495e" onclick="changeColor('#34495e')"></div>
-            <div class="color-dot" style="background: #e74c3c" onclick="changeColor('#e74c3c')"></div>
-            <div class="color-dot" style="background: #f1c40f" onclick="changeColor('#f1c40f')"></div>
-            <div class="color-dot" style="background: #9b59b6" onclick="changeColor('#9b59b6')"></div>
+        <div class="colors" id="colors" style="display: flex;">
+            <div class="color" style="background:#fff" onclick="setColor('#ffffff')"></div>
+            <div class="color" style="background:#2d3436" onclick="setColor('#2d3436')"></div>
+            <div class="color" style="background:#e84393" onclick="setColor('#e84393')"></div>
+            <div class="color" style="background:#fdcb6e" onclick="setColor('#fdcb6e')"></div>
         </div>
 
-        <button class="ar-btn" onclick="activateARMode()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M13 3l6 6-6 6M5 3l-6 6 6 6M3 21h18"/>
-            </svg>
-            <span id="txt-btn">مشاهده در محیط واقعی</span>
+        <button class="ar-btn" onclick="startAR()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+            <span id="txt-btn">مشاهده در محیط</span>
         </button>
     </div>
 
     <script>
         const viewer = document.getElementById('viewer');
-        const itemList = document.getElementById('itemList');
-        const colorPanel = document.getElementById('colorPickerPanel');
-        const slider = document.getElementById('scaleSlider');
+        const list = document.getElementById('list');
+        const slider = document.getElementById('slider');
+        const sizeLbl = document.getElementById('txt-size');
+        const loader = document.getElementById('loader');
         
-        let currentCategory = 'pots';
-        let currentLang = 'fa';
+        let cat = 'pots';
+        let lang = 'fa';
+        let currentScale = 1;
 
-        const translations = {
-            fa: {
-                tabPots: "🏺 گلدان",
-                tabCarpets: "🧶 فرش",
-                title: "انتخاب مدل",
-                subtitle: "مدل موجود",
-                size: "اندازه اولیه:",
-                btn: "مشاهده در محیط واقعی",
-                alert: "دستگاه شما از AR پشتیبانی نمی‌کند"
-            },
-            en: {
-                tabPots: "🏺 Pots",
-                tabCarpets: "🧶 Carpets",
-                title: "Select Model",
-                subtitle: "Models Available",
-                size: "Initial Size:",
-                btn: "View in your space",
-                alert: "Your device does not support AR"
-            }
-        };
-
+        // دیتابیس هوشمند
         const db = {
-            pots: [
-                { name_fa: "گلدان ۱", name_en: "Pot 1", src: "./pot1.glb", icon: "🍍" },
-                { name_fa: "گلدان ۲", name_en: "Pot 2", src: "./pot2.glb", icon: "🌹" },
-                { name_fa: "گلدان ۳", name_en: "Pot 3", src: "./pot3.glb", icon: "🏺" },
-                { name_fa: "گلدان ۴", name_en: "Pot 4", src: "./pot4.glb", icon: "🎍" },
-                { name_fa: "گلدان ۵", name_en: "Pot 5", src: "./pot5.glb", icon: "⛩️" }
-            ],
-            carpets: [
-                { name_fa: "فرش ۱", name_en: "Carpet 1", src: "./carpet1.glb", icon: "🧶" },
-                { name_fa: "فرش ۲", name_en: "Carpet 2", src: "./carpet2.glb", icon: "🦁" },
-                { name_fa: "فرش ۳", name_en: "Carpet 3", src: "./carpet3.glb", icon: "🎨" },
-                { name_fa: "فرش ۴", name_en: "Carpet 4", src: "./carpet4.glb", icon: "💠" },
-                { name_fa: "فرش ۵", name_en: "Carpet 5", src: "./carpet5.glb", icon: "🌷" }
-            ]
+            pots: {
+                shadow: 1,
+                placement: 'auto',
+                // گلدان معمولا سایز درستی دارد (ضریب 1)
+                defaultScale: 1, 
+                items: [
+                    { n_fa:"گلدان ۱", n_en:"Pot 1", src:"./pot1.glb", icon:"🪴" },
+                    { n_fa:"گلدان ۲", n_en:"Pot 2", src:"./pot2.glb", icon:"🌵" },
+                    { n_fa:"گلدان ۳", n_en:"Pot 3", src:"./pot3.glb", icon:"🏺" },
+                    { n_fa:"گلدان ۴", n_en:"Pot 4", src:"./pot4.glb", icon:"🌻" },
+                    { n_fa:"گلدان ۵", n_en:"Pot 5", src:"./pot5.glb", icon:"🎍" }
+                ]
+            },
+            carpets: {
+                shadow: 0, // حذف سایه برای چسبیدن به زمین
+                placement: 'floor', // قفل روی زمین
+                // نکته طلایی: فرش را به طور پیش‌فرض 50 برابر کوچک می‌کنیم (0.02)
+                // اگر فرش‌هایتان خیلی بزرگ است این عدد را 0.01 کنید
+                defaultScale: 0.05, 
+                items: [
+                    { n_fa:"فرش ۱", n_en:"Rug 1", src:"./carpet1.glb", icon:"🧶" },
+                    { n_fa:"فرش ۲", n_en:"Rug 2", src:"./carpet2.glb", icon:"🦁" },
+                    { n_fa:"فرش ۳", n_en:"Rug 3", src:"./carpet3.glb", icon:"🎨" },
+                    { n_fa:"فرش ۴", n_en:"Rug 4", src:"./carpet4.glb", icon:"💠" },
+                    { n_fa:"فرش ۵", n_en:"Rug 5", src:"./carpet5.glb", icon:"🌷" }
+                ]
+            }
         };
 
-        function toggleLanguage() {
-            currentLang = currentLang === 'fa' ? 'en' : 'fa';
-            updateUIText();
-            renderList();
-            
-            if (currentLang === 'en') {
-                document.body.classList.add('lang-en');
-                document.documentElement.setAttribute('dir', 'ltr');
-            } else {
-                document.body.classList.remove('lang-en');
-                document.documentElement.setAttribute('dir', 'rtl');
-            }
+        const txt = {
+            fa: { t_p:"گلدان", t_c:"فرش", h:"انتخاب مدل", sz:"سایز:", b:"مشاهده در محیط" },
+            en: { t_p:"Pots", t_c:"Carpets", h:"Select Model", sz:"Size:", b:"View in AR" }
+        };
+
+        function init() {
+            setCat('pots');
+            // رویداد برای مخفی کردن لودر وقتی مدل لود شد
+            viewer.addEventListener('load', () => loader.style.display = 'none');
+            viewer.addEventListener('progress', () => loader.style.display = 'block');
         }
 
-        function updateUIText() {
-            const t = translations[currentLang];
-            document.getElementById('tab-pots').innerText = t.tabPots;
-            document.getElementById('tab-carpets').innerText = t.tabCarpets;
-            document.getElementById('txt-title').innerText = t.title;
-            document.getElementById('txt-btn').innerText = t.btn;
-            document.getElementById('txt-size').innerText = t.size;
+        function setCat(c) {
+            cat = c;
+            // آپدیت تب‌ها
+            document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+            document.getElementById(c === 'pots' ? 't-pots' : 't-carpets').classList.add('active');
             
-            const count = db[currentCategory].length;
-            document.getElementById('txt-subtitle').innerText = `${count} ${t.subtitle}`;
-        }
-
-        function switchCategory(cat) {
-            currentCategory = cat;
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`tab-${cat}`).classList.add('active');
-            
-            // مخفی کردن انتخاب رنگ برای فرش (اختیاری)
-            // if(cat === 'carpets') colorPanel.style.display = 'none';
-            // else colorPanel.style.display = 'flex';
+            // مخفی/نمایش رنگ‌ها
+            document.getElementById('colors').style.display = c === 'pots' ? 'flex' : 'none';
 
             renderList();
-            updateUIText();
         }
 
         function renderList() {
-            itemList.innerHTML = '';
-            const data = db[currentCategory];
+            list.innerHTML = '';
+            const config = db[cat];
+            
+            config.items.forEach((item, idx) => {
+                const el = document.createElement('div');
+                el.className = `item ${idx===0 && !viewer.src ? 'active' : ''}`;
+                // چک کردن مدل فعلی
+                if(viewer.src && viewer.src.includes(item.src.replace('./',''))) el.classList.add('active');
 
-            data.forEach((item, index) => {
-                const btn = document.createElement('div');
-                const isActive = viewer.src.includes(item.src.replace('./',''));
-                btn.className = `item-box ${isActive ? 'active' : ''}`;
-                if (index === 0 && !viewer.src) btn.classList.add('active');
+                el.innerHTML = item.icon;
+                el.onclick = () => loadItem(item, el, config);
+                list.appendChild(el);
 
-                btn.innerHTML = item.icon;
-                
-                btn.onclick = () => {
-                    loadModel(item.src);
-                    document.querySelectorAll('.item-box').forEach(i => i.classList.remove('active'));
-                    btn.classList.add('active');
-                };
-                itemList.appendChild(btn);
+                // لود خودکار اولی
+                if(idx === 0 && !viewer.src) loadItem(item, el, config);
             });
         }
 
-        function loadModel(src) {
-            viewer.src = src;
-            // ریست کردن اسلایدر وقتی مدل عوض میشه (اختیاری)
-            slider.value = 1;
-            updateScale(1);
+        function loadItem(item, el, config) {
+            loader.style.display = 'block';
+            
+            // هایلایت کردن آیتم
+            document.querySelectorAll('.item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+
+            // تنظیمات Viewer
+            viewer.src = item.src;
+            viewer.shadowIntensity = config.shadow;
+            viewer.setAttribute('ar-placement', config.placement);
+
+            // اعمال سایز اصلاح شده (Correction)
+            // این خط فرش را مجبور می‌کند کوچک شود
+            const scale = config.defaultScale;
+            currentScale = scale;
+            viewer.scale = `${scale} ${scale} ${scale}`;
+            
+            // آپدیت اسلایدر
+            slider.value = scale;
+            updateSizeText(scale);
         }
 
-        // تابع تغییر سایز (مهم)
-        function updateScale(val) {
-            // اعمال تغییر سایز روی مدل
+        function onSizeChange(val) {
+            currentScale = val;
             viewer.scale = `${val} ${val} ${val}`;
+            updateSizeText(val);
         }
 
-        function changeColor(hex) {
-            if (!viewer.model) return;
+        function updateSizeText(val) {
+            // نمایش درصد برای فهم بهتر کاربر
+            const percent = Math.round(val * 100);
+            const lbl = lang === 'fa' ? `سایز: ${percent}%` : `Size: ${percent}%`;
+            sizeLbl.innerText = lbl;
+        }
+
+        function setColor(hex) {
+            if(!viewer.model) return;
             const mat = viewer.model.materials[0];
             if(mat) mat.pbrMetallicRoughness.setBaseColorFactor(hexToRgb(hex));
+        }
+
+        function startAR() {
+            if(viewer.canActivateAR) {
+                // تلاش برای فعال‌سازی
+                viewer.activateAR();
+            } else {
+                alert(lang==='fa' ? 'دستگاه پشتیبانی نمی‌کند' : 'Device not supported');
+            }
+        }
+
+        function toggleLang() {
+            lang = lang === 'fa' ? 'en' : 'fa';
+            document.body.className = lang === 'en' ? 'lang-en' : '';
+            
+            const t = txt[lang];
+            document.getElementById('t-pots').innerText = t.t_p;
+            document.getElementById('t-carpets').innerText = t.t_c;
+            document.getElementById('txt-title').innerText = t.h;
+            document.getElementById('txt-btn').innerText = t.b;
+            updateSizeText(currentScale);
         }
 
         function hexToRgb(hex) {
@@ -303,15 +319,7 @@
             return [r, g, b, 1];
         }
 
-        function activateARMode() {
-            if (viewer.canActivateAR) {
-                viewer.activateAR();
-            } else {
-                alert(translations[currentLang].alert);
-            }
-        }
-
-        renderList();
+        init();
     </script>
 </body>
 </html>
